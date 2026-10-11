@@ -1,67 +1,144 @@
-# SafeHer
+# SafeHer 🛡️
 
-A personal-safety companion app for women, built with Flutter. It brings the
-core safety tools into one fast, offline-capable app: emergency SOS,
-live-location sharing, safe-route guidance, nearby help, an in-app safety
-assistant, and trusted contacts.
+A personal-safety companion application for women, built with Flutter.
+SafeHer brings essential safety tools into one modern and user-friendly
+application, including emergency SOS, location sharing, safe-route guidance,
+nearby emergency help, safety assistance, and trusted contacts.
 
-The app is a complete front end. Device and network features (GPS, SMS, maps,
-push, auth) are handled through a `services/` layer that currently returns
-sample data, so the whole app runs end to end without a backend, API keys, or
-device permissions. Going live means swapping a single method body in a service
-for a real integration — the UI does not change.
+> **Project Status:** Frontend prototype with a service-layer architecture.
+> The Web version is currently the primary supported platform, while Android
+> support is partially implemented. External device and network features
+> currently use sample data so the project can run without exposing private
+> credentials or requiring device permissions.
 
-## Features
+---
 
-- **Splash** — animated intro that routes to login
-- **Login** — email/password with biometric and SSO entry points, remember me, forgot password
-- **Request access** — sign-up form with validation
-- **Dashboard** — greeting, protection status, feature grid, recent activity
-- **Emergency SOS** — hold-to-activate countdown, dispatch, call and message actions
-- **Live location** — map preview, share duration, per-contact sharing
-- **Safe route** — safety-scored routes on a route map with nearby police stations
-- **Emergency contacts** — add, edit and remove trusted contacts with per-contact toggles
-- **Nearby help** — police, hospitals, safe zones and shelters with filters
-- **Alerts & notifications** — tabbed alerts and notifications with adjustable sensitivity
-- **Safety assistant** — chat with keyword-matched guidance and quick prompts
-- **Profile & settings** — user info, safety stats and preferences
+## 🌸 Overview
 
-## Running
+SafeHer is designed to provide a centralized safety experience for women.
+Instead of switching between multiple applications during an emergency, users
+can access important safety features from a single interface.
 
-```bash
-flutter pub get
-flutter run -d chrome      # web
-flutter run                # connected device / emulator
-flutter test               # smoke test
-flutter analyze            # static analysis
-```
+The current version focuses on the complete frontend experience and application
+flow. Device and network-dependent functionality such as GPS, SMS, maps, push
+notifications, and authentication is represented through a `services/` layer
+using sample data.
 
-Build artifacts:
+The architecture is designed so that real APIs or device plugins can be
+integrated later without changing the application's main UI.
 
-```bash
-flutter build web
-flutter build apk
-flutter build appbundle
-```
+---
 
-## Architecture
+## ✨ Features
 
-```
-lib/
-  main.dart            app entry, theme, initial route
-  routes/              centralised route names and onGenerateRoute
-  services/            data layer (the swap-in points for real APIs)
-  models/              plain data models
-  widgets/             shared UI
-  Screens/             feature screens
-```
+### 🚨 Emergency SOS
 
-Navigation is centralised through `AppRouter.onGenerateRoute`, which also
-provides a safe fallback so no route leads to a dead end. Data flows
-Screen → Service → Model; to go live, replace a service method body with a real
-API or plugin call.
+- Hold-to-activate SOS countdown
+- Emergency dispatch interface
+- Call and message actions
+- Quick access during emergency situations
 
-## License
+### 📍 Live Location
 
-Educational project. Not affiliated with any emergency service; the simulated
-SOS does not contact real authorities.
+- Location preview
+- Location-sharing duration
+- Per-contact location sharing
+- Designed for future real GPS integration
+
+### 🛣️ Safe Route
+
+- Safety-scored route suggestions
+- Route map interface
+- Nearby police-station information
+- Designed for future real map and routing integration
+
+### 👥 Emergency Contacts
+
+- Add trusted contacts
+- Edit and remove contacts
+- Per-contact safety controls
+- Contact management interface
+
+### 🏥 Nearby Help
+
+- Police stations
+- Hospitals
+- Safe zones
+- Shelters
+- Category-based filtering
+
+### 🔔 Alerts & Notifications
+
+- Alerts and notifications interface
+- Tab-based organization
+- Adjustable notification sensitivity
+
+### 🤖 Safety Assistant
+
+- In-app safety assistant
+- Keyword-based safety guidance
+- Quick safety prompts
+- Designed for future AI/API integration
+
+### 👤 Profile & Settings
+
+- User information
+- Safety statistics
+- Application preferences
+- Safety-related settings
+
+### 🔐 Authentication UI
+
+- Email/password login interface
+- Remember-me option
+- Forgot-password flow
+- Biometric and SSO entry points
+- Request-access/sign-up form with validation
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework:** Flutter
+- **Language:** Dart
+- **Architecture:** Service-layer architecture
+- **UI:** Flutter Widgets
+- **Data Layer:** Service classes with sample data
+- **Primary Platform:** Web
+- **Additional Platform:** Android (partial support)
+
+---
+
+## 📱 Platform Support
+
+| Platform | Status |
+|---|---|
+| 🌐 Web | **Fully functional and currently the primary supported platform** |
+| 🤖 Android | **Partially supported; some features and device-specific integrations are still under development** |
+| 🍎 iOS | **Not currently supported/tested** |
+
+The application is currently developed and tested primarily for the Web
+platform. Android support is partially implemented, while additional
+device-specific functionality can be developed in future iterations.
+
+---
+
+## 🏗️ Architecture
+
+SafeHer follows a service-layer approach that separates the UI from external
+device and network functionality.
+
+```text
+                    SafeHer App
+                        │
+                        ▼
+                   UI / Screens
+                        │
+                        ▼
+                    Services
+                        │
+                        ▼
+                     Models
+                        │
+                        ▼
+              Sample / External Data
