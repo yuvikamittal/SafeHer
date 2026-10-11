@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SafeHer · SOS Emergency Response Dashboard</title>
+<style>
+  
+  :root {
+    --bg0:#0D1B2A; --bg1:#1A2E44; --bg2:#0F2335;
+    --card:#162435; --card-2:#19283c;
+    --line:rgba(255,255,255,.08);
+    --line-2:rgba(255,255,255,.05);
+    --text:#ffffff;
+    --muted:rgba(255,255,255,.55);
+    --muted-2:rgba(255,255,255,.38);
+    --pink:#E91E8C; --pink-2:#FF6EBF; --purple:#9C27B0;
+    --orange:#D85A30; --orange-2:#FF8C64;
+    --red:#FF3B3B; --red-2:#FF6B6B;
+    --green:#1D9E75; --green-2:#34D399;
+    --blue:#4DA3FF; --amber:#FBBF24;
+    --radius:18px;
+    --font: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { height:100%; }
+  body {
+    font-family:var(--font);
+    color:var(--text);
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(233,30,140,.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(216,90,48,.12), transparent 55%),
+      linear-gradient(135deg, var(--bg0) 0%, var(--bg1) 55%, var(--bg2) 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    padding:22px clamp(14px,3vw,40px) 60px;
+  }
+  /* faint grid texture */
+  body::before {
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+    background-size:46px 46px;
+    mask-image:radial-gradient(circle at 50% 30%, #000 0%, transparent 80%);
+  }
+  .wrap { position:relative; z-index:1; max-width:1280px; margin:0 auto; }
+
+  /* ── Top bar ─────────────────────────────────────────── */
+  .topbar { display:flex; align-items:center; gap:14px; margin-bottom:22px; flex-wrap:wrap; }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .logo {
+    width:46px; height:46px; border-radius:14px; display:grid; place-items:center;
+    background:linear-gradient(135deg, var(--pink), var(--purple));
+    box-shadow:0 8px 24px rgba(233,30,140,.4); flex:none;
+  }
+  .logo svg { width:24px; height:24px; }
+  .brand h1 { font-size:19px; font-weight:800; letter-spacing:.3px; line-height:1; }
+  .brand p { font-size:11.5px; color:var(--muted-2); margin-top:3px; letter-spacing:.3px; }
+  .topbar .spacer { flex:1 1 auto; }
+  .clock {
+    text-align:right; font-variant-numeric:tabular-nums;
+    padding:8px 14px; border:1px solid var(--line); border-radius:12px;
+    background:rgba(255,255,255,.03);
+  }
+  .clock .t { font-size:16px; font-weight:700; letter-spacing:.5px; }
+  .clock .d { font-size:10.5px; color:var(--muted-2); margin-top:2px; }
+  .live {
+    display:inline-flex; align-items:center; gap:8px;
+    padding:8px 14px; border-radius:30px;
+    background:rgba(255,59,59,.14); border:1px solid rgba(255,59,59,.4);
+    font-size:12px; font-weight:800; letter-spacing:1.2px; color:var(--red-2);
+  }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--red-2);
+    box-shadow:0 0 0 0 rgba(255,107,107,.7); animation:ping 1.4s infinite; }
+  @keyframes ping {
+    0% { box-shadow:0 0 0 0 rgba(255,107,107,.6); }
+    70% { box-shadow:0 0 0 10px rgba(255,107,107,0); }
+    100% { box-shadow:0 0 0 0 rgba(255,107,107,0); }
+  }
+
+  /* ── KPI strip ───────────────────────────────────────── */
+  .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px; }
+  .kpi {
+    background:linear-gradient(160deg, var(--card), rgba(22,36,53,.6));
+    border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px;
+    box-shadow:0 6px 18px rgba(0,0,0,.25);
+  }
+  .kpi .k-top { display:flex; align-items:center; gap:9px; color:var(--muted); font-size:11.5px;
+    font-weight:600; letter-spacing:.4px; text-transform:uppercase; }
+  .kpi .k-ic { width:26px; height:26px; border-radius:8px; display:grid; place-items:center; font-size:14px; flex:none; }
+  .kpi .k-val { font-size:25px; font-weight:800; margin-top:10px; font-variant-numeric:tabular-nums; }
+  .kpi .k-sub { font-size:11.5px; color:var(--muted-2); margin-top:3px; }
+
+  /* ── Cards / grid ────────────────────────────────────── */
+  .grid { display:grid; grid-template-columns:1.05fr 1fr; gap:16px; margin-bottom:16px; }
+  .card {
+    background:linear-gradient(160deg, rgba(22,36,53,.92), rgba(22,36,53,.72));
+    border:1px solid var(--line); border-radius:var(--radius); padding:20px;
+    box-shadow:0 10px 28px rgba(0,0,0,.28);
+  }
+  .card-h { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  .card-h .ic { width:30px; height:30px; border-radius:9px; display:grid; place-items:center; font-size:15px; flex:none; }
+  .card-h h2 { font-size:14.5px; font-weight:700; letter-spacing:.2px; }
+  .card-h .tag { margin-left:auto; font-size:10.5px; font-weight:700; letter-spacing:.6px;
+    padding:4px 9px; border-radius:7px; text-transform:uppercase; }
+
+  /* ── Active SOS alert (hero) ─────────────────────────── */
+  .alert {
+    border:1px solid rgba(255,59,59,.35);
+    background:
+      radial-gradient(420px 200px at 15% 0%, rgba(255,59,59,.14), transparent 70%),
+      linear-gradient(160deg, rgba(42,10,10,.9), rgba(22,18,18,.85));
+    box-shadow:0 14px 40px rgba(255,59,59,.14);
+  }
+  .victim { display:flex; align-items:center; gap:16px; }
+  .avatar {
+    width:62px; height:62px; border-radius:50%; flex:none; display:grid; place-items:center;
+    font-size:22px; font-weight:800; color:#fff;
+    background:linear-gradient(135deg, var(--pink), var(--purple));
+    position:relative;
+  }
+  .avatar::after {
+    content:""; position:absolute; inset:-6px; border-radius:50%;
+    border:2px solid rgba(255,59,59,.5); animation:halo 1.6s ease-out infinite;
+  }
+  @keyframes halo {
+    0% { transform:scale(.9); opacity:.9; }
+    100% { transform:scale(1.4); opacity:0; }
+  }
+  .victim .v-info { flex:1; }
+  .victim .v-name { font-size:19px; font-weight:800; }
+  .victim .v-meta { font-size:12.5px; color:var(--muted); margin-top:3px; }
+  .badge-sos {
+    display:inline-flex; align-items:center; gap:7px; margin-top:8px;
+    background:rgba(255,59,59,.18); border:1px solid rgba(255,59,59,.45);
+    color:var(--red-2); font-size:11px; font-weight:800; letter-spacing:1px;
+    padding:5px 10px; border-radius:20px;
+  }
+  .v-details { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:18px; }
+  .v-cell { background:rgba(255,255,255,.04); border:1px solid var(--line-2);
+    border-radius:11px; padding:11px 13px; }
+  .v-cell .l { font-size:10.5px; color:var(--muted-2); text-transform:uppercase; letter-spacing:.5px; }
+  .v-cell .v { font-size:14px; font-weight:700; margin-top:3px; font-variant-numeric:tabular-nums; }
+  .elapsed { color:var(--orange-2); }
+
+  /* ── Map ─────────────────────────────────────────────── */
+  .map-wrap {
+    position:relative; height:268px; border-radius:14px; overflow:hidden;
+    border:1px solid var(--line);
+    background:
+      radial-gradient(circle at 60% 45%, #15314a, #0c1b2b 70%);
+  }
+  .map-grid { position:absolute; inset:0;
+    background-image:
+      linear-gradient(rgba(77,163,255,.10) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(77,163,255,.10) 1px, transparent 1px);
+    background-size:34px 34px; }
+  .road { position:absolute; background:rgba(255,255,255,.06); border-radius:4px; }
+  .road.r1 { width:140%; height:14px; top:42%; left:-20%; transform:rotate(-12deg); }
+  .road.r2 { width:140%; height:10px; top:68%; left:-20%; transform:rotate(7deg); }
+  .road.r3 { width:14px; height:140%; left:38%; top:-20%; transform:rotate(9deg); }
+  .road.r4 { width:9px; height:140%; left:72%; top:-20%; transform:rotate(-6deg); }
+  /* victim ping */
+  .ping { position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); }
+  .ping .core { width:18px; height:18px; border-radius:50%;
+    background:var(--red-2); box-shadow:0 0 18px 4px rgba(255,59,59,.7); position:relative; z-index:3; }
+  .ping .ring { position:absolute; left:50%; top:50%; width:18px; height:18px;
+    border-radius:50%; border:2px solid var(--red-2); transform:translate(-50%,-50%);
+    animation:radar 2.4s ease-out infinite; }
+  .ping .ring:nth-child(2){ animation-delay:.8s; }
+  .ping .ring:nth-child(3){ animation-delay:1.6s; }
+  @keyframes radar {
+    0% { width:18px; height:18px; opacity:.85; }
+    100% { width:170px; height:170px; opacity:0; }
+  }
+  .sweep { position:absolute; left:50%; top:46%; width:150px; height:150px;
+    transform:translate(-50%,-50%); border-radius:50%; overflow:hidden; opacity:.5; }
+  .sweep::before { content:""; position:absolute; inset:0;
+    background:conic-gradient(from 0deg, transparent 0deg, rgba(52,211,153,.35) 40deg, transparent 70deg);
+    animation:spin 3.6s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .unit { position:absolute; display:flex; flex-direction:column; align-items:center; gap:3px;
+    font-size:10px; color:var(--green-2); font-weight:700; z-index:4; }
+  .unit .u-dot { width:13px; height:13px; border-radius:50%; background:var(--green-2);
+    border:2px solid #0c1b2b; box-shadow:0 0 10px rgba(52,211,153,.8); }
+  .unit.u1 { left:24%; top:30%; }
+  .unit.u2 { left:80%; top:64%; }
+  .map-foot { display:flex; align-items:center; justify-content:space-between; margin-top:12px;
+    font-size:12.5px; }
+  .coord { font-weight:700; font-variant-numeric:tabular-nums; }
+  .coord-sub { color:var(--muted-2); font-size:11.5px; margin-top:2px; }
+  .acc { color:var(--green-2); font-size:11.5px; font-weight:700;
+    background:rgba(52,211,153,.1); border:1px solid rgba(52,211,153,.3);
+    padding:5px 10px; border-radius:8px; }
+
+  /* ── Contacts ────────────────────────────────────────── */
+  .contact { display:flex; align-items:center; gap:12px; padding:11px 0; border-top:1px solid var(--line-2); }
+  .contact:first-of-type { border-top:none; }
+  .c-av { width:38px; height:38px; border-radius:50%; flex:none; display:grid; place-items:center;
+    font-weight:800; font-size:14px; color:#fff; }
+  .contact .c-name { font-size:13.5px; font-weight:600; }
+  .contact .c-rel { font-size:11.5px; color:var(--muted-2); margin-top:1px; }
+  .c-status { margin-left:auto; font-size:11px; font-weight:700; padding:5px 10px; border-radius:20px;
+    display:inline-flex; align-items:center; gap:6px; transition:.3s; white-space:nowrap; }
+  .s-wait { color:var(--muted-2); background:rgba(255,255,255,.05); border:1px solid var(--line); }
+  .s-sent { color:var(--blue); background:rgba(77,163,255,.12); border:1px solid rgba(77,163,255,.32); }
+  .s-read { color:var(--green-2); background:rgba(52,211,153,.12); border:1px solid rgba(52,211,153,.35); }
+
+  /* ── Responders ──────────────────────────────────────── */
+  .resp { display:flex; align-items:center; gap:12px; padding:11px 0; border-top:1px solid var(--line-2); }
+  .resp:first-of-type { border-top:none; }
+  .r-ic { width:38px; height:38px; border-radius:11px; flex:none; display:grid; place-items:center; font-size:17px; }
+  .resp .r-name { font-size:13.5px; font-weight:600; }
+  .resp .r-sub { font-size:11.5px; color:var(--muted-2); margin-top:1px; }
+  .r-eta { margin-left:auto; text-align:right; }
+  .r-eta .e { font-size:15px; font-weight:800; color:var(--green-2); font-variant-numeric:tabular-nums; }
+  .r-eta .e-l { font-size:10px; color:var(--muted-2); text-transform:uppercase; letter-spacing:.5px; }
+
+  /* ── Timeline ────────────────────────────────────────── */
+  .timeline { display:flex; gap:0; margin-top:6px; flex-wrap:wrap; }
+  .step { flex:1 1 0; min-width:150px; position:relative; padding:0 6px; }
+  .step .node {
+    width:36px; height:36px; border-radius:50%; display:grid; place-items:center;
+    background:rgba(255,255,255,.05); border:2px solid var(--line); font-size:16px;
+    margin:0 auto 10px; position:relative; z-index:2; transition:.4s;
+  }
+  .step::before { content:""; position:absolute; top:18px; left:-50%; width:100%; height:2px;
+    background:var(--line); z-index:1; }
+  .step:first-child::before { display:none; }
+  .step .s-time { text-align:center; font-size:11px; font-weight:700; color:var(--muted-2);
+    font-variant-numeric:tabular-nums; }
+  .step .s-label { text-align:center; font-size:12px; color:var(--muted); margin-top:4px; line-height:1.35; }
+  .step.done .node { background:rgba(52,211,153,.18); border-color:var(--green-2); color:var(--green-2);
+    box-shadow:0 0 16px rgba(52,211,153,.4); }
+  .step.done .s-time { color:var(--green-2); }
+  .step.done .s-label { color:var(--text); }
+  .step.active .node { background:rgba(255,59,59,.2); border-color:var(--red-2); color:var(--red-2);
+    animation:nodepulse 1s infinite; }
+  @keyframes nodepulse { 0%,100%{ box-shadow:0 0 0 0 rgba(255,59,59,.5);} 50%{ box-shadow:0 0 0 8px rgba(255,59,59,0);} }
+
+  /* ── Action bar ──────────────────────────────────────── */
+  .actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:18px; }
+  .btn {
+    flex:1 1 160px; display:flex; align-items:center; justify-content:center; gap:9px;
+    padding:14px 16px; border-radius:13px; border:1px solid var(--line);
+    background:rgba(255,255,255,.04); color:var(--text); font-size:13.5px; font-weight:700;
+    cursor:pointer; transition:.18s; font-family:var(--font);
+  }
+  .btn:hover { transform:translateY(-2px); background:rgba(255,255,255,.08); }
+  .btn:active { transform:translateY(0); }
+  .btn.primary { background:linear-gradient(135deg, var(--orange), #b8431f); border-color:transparent;
+    box-shadow:0 8px 22px rgba(216,90,48,.4); }
+  .btn.call { color:var(--green-2); border-color:rgba(52,211,153,.3); background:rgba(52,211,153,.1); }
+  .btn.msg { color:var(--blue); border-color:rgba(77,163,255,.3); background:rgba(77,163,255,.1); }
+  .btn.broadcast { color:var(--amber); border-color:rgba(251,191,36,.3); background:rgba(251,191,36,.1); }
+
+  .foot { text-align:center; margin-top:26px; font-size:11.5px; color:var(--muted-2); line-height:1.7; }
+  .foot b { color:var(--muted); font-weight:700; }
+
+  /* ── Toast ───────────────────────────────────────────── */
+  #toast { position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(140%);
+    background:linear-gradient(135deg, var(--pink), var(--purple)); color:#fff;
+    padding:13px 22px; border-radius:12px; font-size:13.5px; font-weight:600;
+    box-shadow:0 12px 30px rgba(0,0,0,.4); z-index:99; transition:.35s cubic-bezier(.2,.8,.2,1);
+    max-width:90vw; text-align:center; }
+  #toast.show { transform:translateX(-50%) translateY(0); }
+
+  @media (max-width:880px) {
+    .kpis { grid-template-columns:repeat(2,1fr); }
+    .grid { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2 4 5v6c0 5 3.4 8.5 8 11 4.6-2.5 8-6 8-11V5l-8-3Z" fill="#fff"/><path d="M9.2 12.2 11 14l4-4.5" stroke="#E91E8C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div>
+        <h1>SafeHer <span style="color:var(--pink-2)">·</span> SOS Response Center</h1>
+        <p>Live emergency monitoring &amp; dispatch console</p>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="live"><span class="dot"></span> LIVE</div>
+    <div class="clock">
+      <div class="t" id="clockTime">--:--:--</div>
+      <div class="d" id="clockDate">—</div>
+    </div>
+  </div>
+
+  <!-- KPI strip -->
+  <div class="kpis">
+    <div class="kpi">
+      <div class="k-top"><span class="k-ic" style="background:rgba(255,59,59,.15);color:var(--red-2)">⚠</span> Alert Status</div>
+      <div class="k-val" id="kpiStatus" style="color:var(--red-2)">ACTIVE</div>
+      <div class="k-sub" id="kpiStatusSub">SOS triggered · highest priority</div>
+    </div>
+    <div class="kpi">
+      <div class="k-top"><span class="k-ic" style="background:rgba(216,90,48,.15);color:var(--orange-2)">⏱</span> Time Elapsed</div>
+      <div class="k-val elapsed" id="kpiElapsed">00:00</div>
+      <div class="k-sub">since SOS was triggered</div>
+    </div>
+    <div class="kpi">
+      <div class="k-top"><span class="k-ic" style="background:rgba(77,163,255,.15);color:var(--blue)">👥</span> Contacts Notified</div>
+      <div class="k-val" id="kpiContacts" style="color:var(--blue)">0 / 3</div>
+      <div class="k-sub" id="kpiContactsSub">trusted contacts alerted</div>
+    </div>
+    <div class="kpi">
+      <div class="k-top"><span class="k-ic" style="background:rgba(52,211,153,.15);color:var(--green-2)">🚓</span> Nearest Unit ETA</div>
+      <div class="k-val" id="kpiEta" style="color:var(--green-2)">--:--</div>
+      <div class="k-sub" id="kpiEtaSub">awaiting dispatch</div>
+    </div>
+  </div>
+
+  <!-- Row 1: Active SOS + Map -->
+  <div class="grid">
+    <!-- Active SOS alert -->
+    <div class="card alert">
+      <div class="card-h">
+        <span class="ic" style="background:rgba(255,59,59,.18);color:var(--red-2)">🆘</span>
+        <h2>Active SOS Alert</h2>
+        <span class="tag" style="background:rgba(255,59,59,.18);color:var(--red-2);border:1px solid rgba(255,59,59,.4)">Priority 1</span>
+      </div>
+      <div class="victim">
+        <div class="avatar">P</div>
+        <div class="v-info">
+          <div class="v-name">Priya Sharma</div>
+          <div class="v-meta">SafeHer user · Age 23 · +91 ••••• 47213</div>
+          <span class="badge-sos">🔴 SOS TRIGGERED</span>
+        </div>
+      </div>
+      <div class="v-details">
+        <div class="v-cell"><div class="l">Trigger Method</div><div class="v">Hold SOS button</div></div>
+        <div class="v-cell"><div class="l">Time Elapsed</div><div class="v elapsed" id="alertElapsed">00:00</div></div>
+        <div class="v-cell"><div class="l">Device Battery</div><div class="v">63% 🔋</div></div>
+        <div class="v-cell"><div class="l">Network</div><div class="v">Jio 4G · Strong</div></div>
+      </div>
+    </div>
+
+    <!-- Live map -->
+    <div class="card">
+      <div class="card-h">
+        <span class="ic" style="background:rgba(52,211,153,.15);color:var(--green-2)">📍</span>
+        <h2>Live Location</h2>
+        <span class="tag" style="background:rgba(52,211,153,.12);color:var(--green-2);border:1px solid rgba(52,211,153,.3)">Streaming</span>
+      </div>
+      <div class="map-wrap">
+        <div class="map-grid"></div>
+        <div class="road r1"></div><div class="road r2"></div>
+        <div class="road r3"></div><div class="road r4"></div>
+        <div class="sweep"></div>
+        <div class="ping">
+          <span class="ring"></span><span class="ring"></span><span class="ring"></span>
+          <span class="core"></span>
+        </div>
+        <div class="unit u1"><span class="u-dot"></span>Patrol 7</div>
+        <div class="unit u2"><span class="u-dot"></span>Volunteer</div>
+      </div>
+      <div class="map-foot">
+        <div>
+          <div class="coord">28.6139° N, 77.2090° E</div>
+          <div class="coord-sub">Connaught Place, New Delhi, India</div>
+        </div>
+        <div class="acc">Accuracy ±8 m</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: Contacts + Responders -->
+  <div class="grid">
+    <!-- Emergency contacts -->
+    <div class="card">
+      <div class="card-h">
+        <span class="ic" style="background:rgba(77,163,255,.15);color:var(--blue)">👤</span>
+        <h2>Trusted Contacts</h2>
+        <span class="tag" style="background:rgba(77,163,255,.12);color:var(--blue);border:1px solid rgba(77,163,255,.3)">Auto-notify</span>
+      </div>
+      <div class="contact" data-contact="0">
+        <div class="c-av" style="background:linear-gradient(135deg,#34D399,#1D9E75)">S</div>
+        <div><div class="c-name">Sarah M.</div><div class="c-rel">Primary contact · Sister</div></div>
+        <span class="c-status s-wait">Waiting</span>
+      </div>
+      <div class="contact" data-contact="1">
+        <div class="c-av" style="background:linear-gradient(135deg,#4DA3FF,#1A73E8)">J</div>
+        <div><div class="c-name">James K.</div><div class="c-rel">Family · Father</div></div>
+        <span class="c-status s-wait">Waiting</span>
+      </div>
+      <div class="contact" data-contact="2">
+        <div class="c-av" style="background:linear-gradient(135deg,#FF6B6B,#D85A30)">112</div>
+        <div><div class="c-name">Emergency Services</div><div class="c-rel">Police control room · 112</div></div>
+        <span class="c-status s-wait">Waiting</span>
+      </div>
+    </div>
+
+    <!-- Nearby responders -->
+    <div class="card">
+      <div class="card-h">
+        <span class="ic" style="background:rgba(251,191,36,.15);color:var(--amber)">🚨</span>
+        <h2>Nearby Responders</h2>
+        <span class="tag" style="background:rgba(251,191,36,.12);color:var(--amber);border:1px solid rgba(251,191,36,.3)">3 in range</span>
+      </div>
+      <div class="resp">
+        <div class="r-ic" style="background:rgba(52,211,153,.14)">🚓</div>
+        <div><div class="r-name">PCR Van · Patrol 7</div><div class="r-sub">Delhi Police · 0.8 km away</div></div>
+        <div class="r-eta"><div class="e" id="resp1Eta">--</div><div class="e-l">ETA</div></div>
+      </div>
+      <div class="resp">
+        <div class="r-ic" style="background:rgba(255,110,191,.14)">🏥</div>
+        <div><div class="r-name">RML Hospital</div><div class="r-sub">Ambulance on standby · 1.4 km</div></div>
+        <div class="r-eta"><div class="e" style="color:var(--pink-2)">5 min</div><div class="e-l">ETA</div></div>
+      </div>
+      <div class="resp">
+        <div class="r-ic" style="background:rgba(77,163,255,.14)">🛡️</div>
+        <div><div class="r-name">SafeHer Volunteer</div><div class="r-sub">Verified · 0.5 km away</div></div>
+        <div class="r-eta"><div class="e" style="color:var(--blue)">3 min</div><div class="e-l">ETA</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Response timeline -->
+  <div class="card">
+    <div class="card-h">
+      <span class="ic" style="background:rgba(233,30,140,.15);color:var(--pink-2)">⚡</span>
+      <h2>Response Timeline</h2>
+      <span class="tag" id="tlTag" style="background:rgba(255,59,59,.15);color:var(--red-2);border:1px solid rgba(255,59,59,.4)">In progress</span>
+    </div>
+    <div class="timeline" id="timeline">
+      <div class="step" data-step="0"><div class="node">🆘</div><div class="s-time">0:00</div><div class="s-label">SOS triggered</div></div>
+      <div class="step" data-step="1"><div class="node">📡</div><div class="s-time">0:01</div><div class="s-label">GPS location locked</div></div>
+      <div class="step" data-step="2"><div class="node">📍</div><div class="s-time">0:02</div><div class="s-label">Live stream started</div></div>
+      <div class="step" data-step="3"><div class="node">👥</div><div class="s-time">0:04</div><div class="s-label">Contacts notified</div></div>
+      <div class="step" data-step="4"><div class="node">📞</div><div class="s-time">0:06</div><div class="s-label">112 alerted</div></div>
+      <div class="step" data-step="5"><div class="node">🚓</div><div class="s-time">0:08</div><div class="s-label">Unit dispatched</div></div>
+      <div class="step" data-step="6"><div class="node">🛡️</div><div class="s-time">0:10</div><div class="s-label">Responder en route</div></div>
+    </div>
+
+    <!-- Action bar -->
+    <div class="actions">
+      <button class="btn primary" id="simBtn" onclick="simulate()">▶ Simulate Incoming SOS</button>
+      <button class="btn call" onclick="toast('📞 Calling Priya Sharma…')">Call Victim</button>
+      <button class="btn msg" onclick="toast('💬 Live chat opened with victim')">Message</button>
+      <button class="btn broadcast" onclick="toast('📢 Alert broadcast to all nearby responders')">Broadcast Alert</button>
+    </div>
+  </div>
+
+  <div class="foot">
+    <b>SafeHer — Women's Safety</b> · SOS Emergency Response Dashboard &nbsp;|&nbsp; Final-year project demo<br>
+    This is a <b>front-end simulation</b> for presentation purposes — sample data, no real dispatch. Press <b>▶ Simulate Incoming SOS</b> to play the full response flow.
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ── Live clock ───────────────────────────────────────────
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function tickClock(){
+    var d = new Date();
+    document.getElementById('clockTime').textContent =
+      pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+    document.getElementById('clockDate').textContent =
+      d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  }
+  setInterval(tickClock, 1000); tickClock();
+
+  // ── Toast ────────────────────────────────────────────────
+  var toastT;
+  function toast(msg){
+    var el = document.getElementById('toast');
+    el.textContent = msg; el.classList.add('show');
+    clearTimeout(toastT);
+    toastT = setTimeout(function(){ el.classList.remove('show'); }, 2600);
+  }
+
+  // ── Elapsed timer ────────────────────────────────────────
+  var elapsed = 0, elapsedTimer = null;
+  function fmt(s){ return pad(Math.floor(s/60))+':'+pad(s%60); }
+  function runElapsed(){
+    clearInterval(elapsedTimer);
+    elapsedTimer = setInterval(function(){
+      elapsed++;
+      document.getElementById('kpiElapsed').textContent = fmt(elapsed);
+      document.getElementById('alertElapsed').textContent = fmt(elapsed);
+    }, 1000);
+  }
+
+  // ── Helpers ──────────────────────────────────────────────
+  function setContact(i, cls, label){
+    var row = document.querySelector('.contact[data-contact="'+i+'"] .c-status');
+    row.className = 'c-status ' + cls;
+    row.innerHTML = label;
+  }
+  function markStep(i, state){
+    var s = document.querySelector('.step[data-step="'+i+'"]');
+    s.classList.remove('active','done');
+    if (state) s.classList.add(state);
+  }
+  function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+  // ── Simulation sequence ──────────────────────────────────
+  var contactsNotified = 0;
+  async function simulate(){
+    var btn = document.getElementById('simBtn');
+    btn.disabled = true; btn.style.opacity = .6; btn.textContent = '● Live — responding…';
+
+    // reset
+    elapsed = 0; contactsNotified = 0;
+    document.getElementById('kpiElapsed').textContent = '00:00';
+    document.getElementById('alertElapsed').textContent = '00:00';
+    document.getElementById('kpiContacts').textContent = '0 / 3';
+    document.getElementById('kpiContactsSub').textContent = 'dispatching alerts…';
+    document.getElementById('kpiEta').textContent = '--:--';
+    document.getElementById('kpiEtaSub').textContent = 'awaiting dispatch';
+    document.getElementById('tlTag').textContent = 'In progress';
+    [0,1,2].forEach(function(i){ setContact(i,'s-wait','Waiting'); });
+    for (var i=0;i<7;i++) markStep(i, null);
+    runElapsed();
+
+    toast('🆘 Incoming SOS from Priya Sharma');
+
+    markStep(0,'active'); await wait(900); markStep(0,'done');
+    markStep(1,'active'); await wait(1000); markStep(1,'done');
+    markStep(2,'active'); await wait(1000); markStep(2,'done');
+
+    // notify contacts
+    markStep(3,'active');
+    setContact(0,'s-sent','✓ Sent');  await wait(700);
+    contactsNotified=1; document.getElementById('kpiContacts').textContent='1 / 3';
+    setContact(1,'s-sent','✓ Sent');  await wait(700);
+    contactsNotified=2; document.getElementById('kpiContacts').textContent='2 / 3';
+    setContact(0,'s-read','✓✓ Read'); await wait(600);
+    setContact(2,'s-sent','✓ Sent');
+    contactsNotified=3; document.getElementById('kpiContacts').textContent='3 / 3';
+    document.getElementById('kpiContactsSub').textContent='all contacts reached';
+    setContact(1,'s-read','✓✓ Read'); await wait(700);
+    markStep(3,'done');
+
+    // 112
+    markStep(4,'active'); await wait(1000);
+    setContact(2,'s-read','✓✓ Acked');
+    markStep(4,'done');
+
+    // dispatch
+    markStep(5,'active'); await wait(1100);
+    document.getElementById('kpiEtaSub').textContent='Patrol 7 dispatched';
+    markStep(5,'done');
+
+    // en route + ETA countdown
+    markStep(6,'active');
+    document.getElementById('tlTag').textContent = 'Responder en route';
+    var eta = 6*60; // 6 minutes in seconds
+    document.getElementById('resp1Eta').textContent = '6 min';
+    var etaTimer = setInterval(function(){
+      eta -= 7; if (eta < 0) eta = 0;
+      document.getElementById('kpiEta').textContent = fmt(eta);
+      if (eta === 0) clearInterval(etaTimer);
+    }, 1000);
+    document.getElementById('kpiEta').textContent = fmt(eta);
+    await wait(1200); markStep(6,'done');
+    document.getElementById('tlTag').textContent = 'Responder en route';
+
+    toast('✅ All systems alerted · Patrol 7 en route');
+    btn.disabled = false; btn.style.opacity = 1; btn.textContent = '↻ Replay Simulation';
+  }
+</script>
+</body>
+</html>
